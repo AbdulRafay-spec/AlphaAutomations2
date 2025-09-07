@@ -1,0 +1,183 @@
+{
+  "name": "Whatsapp and OpenAI Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a91628b9-4cc5-4351-8e47-daa12407c2d8",
+      "name": "WhatsApp Trigger",
+      "webhookId": "80343947-e817-4a41-8d52-77671c9259bf",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "AltDm97XmxJfA429",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        672,
+        0
+      ],
+      "id": "2e8fd564-fa21-4e32-9229-2a2669e6e864",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.messages[0].audio.id }}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "258e1657-8d48-4df6-9489-bb981dacfbc7",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "eab53772-7ac1-4922-bdda-336106a0e188",
+      "name": "Returning Data Array",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "740619442473226",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        320,
+        224
+      ],
+      "id": "a7ea522a-7a2b-48ff-b9bd-41dba36f0b6f",
+      "name": "Send message",
+      "webhookId": "6b6b163c-c85d-4dc1-9315-ff66de65caac",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "6VXPjVeiTCJNjHrU",
+          "name": "WhatsApp Permanent Access Token"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Returning Data Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returning Data Array": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f1802ca1-98e6-4267-a4f3-e98e5cd01f09",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee80a005c9374c234e6c470491e25fa2a3c709e42586a97bb22dfa003dbc0db5"
+  },
+  "id": "p4fUdf5e1tco287l",
+  "tags": []
+}
